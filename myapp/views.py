@@ -8,8 +8,19 @@ topics=[{'id':1, 'title':'routing','body': 'Routing is...'},
     {'id':3, 'title':'Model','body': 'Model is...'},
     ]
 
-def HTMLTemplate(articleTag):
+def HTMLTemplate(articleTag ,id=None):
     global topics
+    contextUI=""
+    if id !=None:
+        contextUI = f'''
+         <li>
+        <form action="/delete/" method="post">
+            <input type="hidden" name="id"  value={id}>
+            <input type="submit" value="delete">
+        </form>
+    </li>
+        
+        '''
     ol=''
     # f 가 들어가면 중가로 {} 를 바로 사용 할수 있따 
     for topic in topics:
@@ -26,6 +37,7 @@ def HTMLTemplate(articleTag):
     {articleTag}
     <ul>
     <li><a href="/create/"> Create</a></li>
+    {contextUI}
     </ul>
     </body> 
     </html>      '''
@@ -39,10 +51,11 @@ def index(request):
 
 def read(request ,id):
     global topics
+    article=''
     for topic in topics:
         if topic['id'] ==int(id):
             article = f'<h2>{topic["title"]}</h2>{topic["body"]}'
-    return HttpResponse(HTMLTemplate(article))
+    return HttpResponse(HTMLTemplate(article ,id))
 @csrf_exempt
 def create(request):
     global nextId
@@ -63,3 +76,15 @@ def create(request):
         url='/read/'+str(nextId)
         nextId +=1
         return redirect(url)
+
+@csrf_exempt
+def delete(request):
+    global topics
+    if request.method =="POST" :
+        id = request.POST['id']
+        newTopics=[]
+        for topic in topics:
+            if topic['id'] != int(id):
+                newTopics.append(topic)
+        topics = newTopics
+        return redirect('/')
